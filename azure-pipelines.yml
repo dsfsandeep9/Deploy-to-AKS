@@ -44,7 +44,6 @@ stages:
   jobs:
   - deployment: Deploy
     displayName: Deploy to AKS
-    environment: 'k8sdev.default'
     pool:
       name: kube2
       demands:
