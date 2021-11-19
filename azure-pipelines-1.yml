@@ -24,17 +24,15 @@ stages:
        - agent.name -equals kube2
     steps:
     - task: Docker@2
-      displayName: Build an image
       inputs:
         containerRegistry: 'dsfdemoregistry'
         repository: '$(imageRepo)'
-        command: 'build'
+        command: 'buildAndPush'
         Dockerfile: '$(Build.SourceDirectory)/app/Dockerfile'
         tags: |
           $(tag)
           latest
-    
-
+  
 - stage: deploy
   displayName: deploy to build
   dependsOn: Build
