@@ -28,7 +28,7 @@ stages:
         containerRegistry: 'dsfdemoregistry'
         repository: '$(imageRepo)'
         command: 'buildAndPush'
-        Dockerfile: '$(Build.SourceDirectory)/app/Dockerfile'
+        Dockerfile: '**/**/Dockerfile'
         tags: |
           $(tag)
           latest
