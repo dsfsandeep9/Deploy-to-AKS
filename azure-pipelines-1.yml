@@ -1,0 +1,72 @@
+# Docker
+# Build a Docker image
+# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
+
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  imageRepo: sampleapp
+  tag: '$(Build.BuildId)'
+
+stages:
+- stage: Build
+  displayName: Build image
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      name: kube2
+      demands:
+       - agent.name -equals kube2
+    steps:
+    - task: Docker@2
+      displayName: Build an image
+      inputs:
+        containerRegistry: 'dsfdemoregistry'
+        repository: '$(imageRepo)'
+        command: 'build'
+        Dockerfile: '$(Build.SourceDirectory)/app/Dockerfile'
+        tags: |
+          $(tag)
+          latest
+    
+
+- stage: deploy
+  displayName: deploy to build
+  dependsOn: Build
+  variables:
+    acrsecret: kube2
+  jobs:
+  - job: Deploy
+    displayName: Deply to Aks
+    pool:
+      name: kube2
+      demands:
+       - agent.name -equals kube2
+    steps:
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        buildType: 'current'
+        artifactName: 'manifests'
+        targetPath: '$(Pipeline.Workspace)/manifests'
+    
+    - task: KubernetesManifest@0
+      inputs:
+        action: 'createSecret'
+        kubernetesServiceConnection: 'dsfdemocluster'
+        namespace: 'default'
+        secretType: 'dockerRegistry'
+        secretName: '$(acrsecret)'
+        dockerRegistryEndpoint: 'dsfdemoregistry'
+    - task: KubernetesManifest@0
+      inputs:
+        action: 'deploy'
+        kubernetesServiceConnection: 'dsfdemocluster'
+        namespace: 'default'
+        manifests: 
+          $(Pipeline.Workspace)/manifests/service.yml
+          $(Pipeline.Workspace)/manifests/deployment.yml
