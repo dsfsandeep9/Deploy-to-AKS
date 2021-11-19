@@ -10,7 +10,7 @@ RUN dotnet restore
 # Copy everything else and build
 COPY . ./
 WORKDIR /app
-RUN dotnet publish "SampleWebApp.csproj" -c Release -o out
+RUN dotnet publish -c release -o /WebApp --no-restore
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:3.1
